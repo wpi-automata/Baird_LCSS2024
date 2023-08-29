@@ -5,7 +5,7 @@ from numpy import clip, empty, inf
 from scipy.ndimage import shift
 
 import gurobipy as gp
-from gurobipy import GRB #, QuadExpr
+from gurobipy import GRB, min_ #, QuadExpr
 
 from interval import get_lu
 
@@ -474,37 +474,57 @@ class GurobiMICPSolver(STLSolver):
             (formula, z, t, idx) = stack.pop()
             if isinstance(formula, LinearPredicate):
                 if t < 0: continue # the index is invalid most likely due to a past time formula.
-
-                if formula.b.dtype == np.interval :
-                    _b, b_ = get_lu(formula.b)
-                else :
-                    _b = formula.b; b_ = formula.b
-                # use b_
-
-
-                if formula.a.dtype == np.interval :
-                    _a, a_ = get_lu(formula.a)
-                else :
-                    _a = formula.a; a_ = formula.a
-                
-                a = _a.copy()
-                for j in range(_a.shape[0]):
-                    if a[j,0] > 0:
-                        pass
-                    else:
-                        a[j,0] = _a[j,0]
-
-                ap, an = d_positive(a)
-                
-                # Now, for the constraints.
                 if self.intervals:
-                    self.model.addConstr( ap.T @ self.y[:int(self.sys.p/2), t:t+1] + an.T @ self.y[int(self.sys.p/2):, t:t+1]
-                                        - b_ + (1-z) * self.M >= self.rho[specIdx, t])
-                else:
-                    self.model.addConstr( formula.a.T @ self.y[:, t:t+1] - formula.b + (1-z) * self.M >= self.rho[specIdx, t])
+                    if formula.b.dtype == np.interval :
+                        _b, b_ = get_lu(formula.b)
+                    else :
+                        _b = formula.b; b_ = formula.b
 
-                bee = self.model.addMVar(1,vtype=GRB.BINARY)
-                self.model.addConstr(z == bee)
+                    if formula.a.dtype == np.interval :
+                        _a, a_ = get_lu(formula.a)
+                    else :
+                        _a = formula.a; a_ = formula.a
+
+                    ps = _a.shape[0] # The length of the output vector, non-decomposed.
+                    s_js = []
+                    for j in range(ps): # Through the a-vectors.
+                        _a__y = self.model.addVar(lb=-self.M)
+                        _a_y_ = self.model.addVar(lb=-self.M)
+                        a___y = self.model.addVar(lb=-self.M)
+                        a__y_ = self.model.addVar(lb=-self.M)
+
+                        self.model.addConstr( _a__y == _a * self.y[j, t:t+1] )
+                        self.model.addConstr( _a_y_ == _a * self.y[j + ps, t:t+1])
+                        self.model.addConstr( a___y == a_ * self.y[j, t:t+1])
+                        self.model.addConstr( a__y_ == a_ * self.y[j + ps, t:t+1])
+
+                        s_j = self.model.addVar(lb=-self.M)
+                        if (_a[j] > 0):
+                            self.model.addConstr(s_j == min_(_a__y, a___y))
+                        elif (a_[j] < 0):
+                            self.model.addConstr(s_j == min_(_a_y_, a__y_))
+                        else:
+                            self.model.addConstr(s_j == min_(_a__y, _a_y_, a___y, a__y_))
+                        s_js.append(s_j)
+
+                    s = self.model.addVar(lb=-self.M)
+                    self.model.addConstr(s <= sum(s_js))
+                    
+                    # Now, for the constraints.
+                    self.model.addConstr( s - b_ + (1-z) * self.M >= self.rho[specIdx, t])
+                elif self.tubeMPCEnabled and t >= self.horizon: # enforced on y, not u, hence self.horizon and not self.horizon-1.
+                    tubeIdx = min(t-self.horizon, self.N-2)
+                    if np.all(formula.a >= 0):
+                        self.model.addConstr( formula.a.T @ (self.y[:,t:t+1] - self.tubeMPCBuffer[tubeIdx]) - \
+                            formula.b + (1-z)*self.M  >= self.rho[specIdx, t] )
+                    else:
+                        self.model.addConstr( formula.a.T @ (self.y[:,t:t+1] + self.tubeMPCBuffer[tubeIdx]) - \
+                            formula.b + (1-z)*self.M  >= self.rho[specIdx, t] )
+                        # print(f'Added constraint {formula.a.T} (y+{self.tubeMPCBuffer[tubeIdx]}) - {formula.b} >= 0')
+                else:
+                    self.model.addConstr( formula.a.T @ self.y[:,t:t+1] - formula.b + (1-z)*self.M  >= self.rho[specIdx, t] )
+                b = self.model.addMVar(1,vtype=GRB.BINARY)
+                self.model.addConstr(z == b)
             elif isinstance(formula, NonlinearPredicate):
                 raise TypeError("Mixed integer programming does not support nonlinear predicates")
             else:

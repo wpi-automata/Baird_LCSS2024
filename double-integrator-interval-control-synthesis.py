@@ -146,7 +146,7 @@ def main():
 
     print("--- Execution time: %s seconds ---" % (time.time() - start_time))
 
-    # Compute the robustness interval.
+    # Compute the robustness interval afterwards for plotting..
     rho = []
     for j in range(sim_length - horizon):
         rho.append(pi.robustness(x_hist[2:3, :], j))
