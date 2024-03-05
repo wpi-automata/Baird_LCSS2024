@@ -493,10 +493,10 @@ class GurobiMICPSolver(STLSolver):
                         a___y = self.model.addVar(lb=-self.M)
                         a__y_ = self.model.addVar(lb=-self.M)
 
-                        self.model.addConstr( _a__y == _a * self.y[j, t:t+1] )
-                        self.model.addConstr( _a_y_ == _a * self.y[j + ps, t:t+1])
-                        self.model.addConstr( a___y == a_ * self.y[j, t:t+1])
-                        self.model.addConstr( a__y_ == a_ * self.y[j + ps, t:t+1])
+                        self.model.addConstr( _a__y == _a[j] * self.y[j, t:t+1] )
+                        self.model.addConstr( _a_y_ == _a[j] * self.y[j + ps, t:t+1])
+                        self.model.addConstr( a___y == a_[j] * self.y[j, t:t+1])
+                        self.model.addConstr( a__y_ == a_[j] * self.y[j + ps, t:t+1])
 
                         s_j = self.model.addVar(lb=-self.M)
                         if (_a[j] > 0):
