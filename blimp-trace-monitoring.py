@@ -88,6 +88,8 @@ rho_axes.grid(True)
 # x_axes.grid(True)
 # x_axes.set_title('$x$')
 rho_fig.set_figheight(2.0)
+
+#Consider adding in a mkdir here
 rho_fig.savefig('output/blimp_trace_monitoring.pdf', format='pdf')
 plt.show()
 
