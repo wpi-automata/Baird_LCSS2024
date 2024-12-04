@@ -4,7 +4,7 @@
     # Do the same for the blimp data- see how it lines up with plots created by other scripts 
 
 import pickle 
-# from scipy.io import loadmat
+from scipy.io import loadmat
 import pandas as pd
 import numpy
 import numpy.core.multiarray 
@@ -56,8 +56,13 @@ for timestamp in data:
     alt_4.append(timestamp[1][4]["alt"])
    
 # Part 2: Loading the blimp data 
-# mat = loadmat('blimp-rta-output-pd-video.mat')
-# x = mat['x'] # nt columns, 12 rows.
+mat = loadmat('blimp-rta-output-pd-video.mat')
+x = mat['x'] # nt columns, 12 rows.
+p = x[6:9]
+p_x = x[0]
+p_y = x[1]
+p_z = x[2]
+
 
 # Part 3: Plotting the data 
 
@@ -98,5 +103,12 @@ plt.scatter(lat_1, lon_1)
 plt.scatter(lat_2, lon_2)
 plt.scatter(lat_3, lon_3)
 plt.scatter(lat_4, lon_4)
+
+# 2D Blimp - This is likely not right 
+plt.figure()
+plt.title("Blimp 2D Trajectory")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(p_x, p_y)
 
 plt.show()
