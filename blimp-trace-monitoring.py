@@ -36,7 +36,14 @@ nt = t.shape[0]
 # Create an STL formula - start first with a known STL formula.
 square_dim = 1.41
 a_x = np.zeros((1,12)); a_x[0,6] = 1
+print("a_x")
+print(a_x)
+
+
 a_y = np.zeros((1,12)); a_y[0,7] = 1
+print("a_y")
+print(a_y)
+
 left = LinearPredicate(a_x, square_dim) # x - 1.23 >= 0, x >= 1.23
 right = LinearPredicate(-a_x, square_dim) # -x - 1.23 >= 0, x <= -1.23
 top = LinearPredicate(a_y, square_dim)

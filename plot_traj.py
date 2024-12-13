@@ -5,7 +5,7 @@
 
 import pickle 
 from scipy.io import loadmat
-import pandas as pd
+# import pandas as pd
 import numpy
 import numpy.core.multiarray 
 import matplotlib.pyplot as plt
@@ -38,10 +38,20 @@ lat_4 = []
 lon_4 = []
 alt_4 = []
 
-for timestamp in data: 
+time = []
+
+t1 = 0
+t2 = 0
+offset = 0.0001
+
+for timestamp in data:
     lat_1.append(timestamp[1][1]["lat"])
     lon_1.append(timestamp[1][1]["lon"])
     alt_1.append(timestamp[1][1]["alt"])
+
+    # Getting the time 
+    if(timestamp[1][1]["lat"] >= 42.49464 - offset and timestamp[1][1]["lat"] <= 42.49464 + offset): 
+        time.append(timestamp[0])
 
     lat_2.append(timestamp[1][2]["lat"])
     lon_2.append(timestamp[1][2]["lon"])
@@ -66,6 +76,9 @@ p_z = x[2]
 
 # Part 3: Plotting the data 
 
+print(f"Start time: {time[0]}")
+print(f"End time: {time[len(time) - 1]}")
+
 # 3D (1 agent)
 fig = plt.figure()
 plt.title("Agent 1 3D GCS Trajectory")
@@ -80,7 +93,12 @@ plt.figure()
 plt.title("Agent 1 2D GCS Trajectory")
 plt.xlabel("Latitude")
 plt.ylabel("Longitude")
+plt.axis('equal')
+
+square = plt.Rectangle((42.49464 - offset, -71.6734 - offset), 2*offset, 2*offset, facecolor='none', ec="red")
+plt.gca().add_patch(square)
 plt.scatter(lat_1, lon_1)
+
 
 # 3D (all agents)
 fig = plt.figure()
