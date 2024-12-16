@@ -33,13 +33,14 @@ alt_1 = []
 # lat_4 = []
 # lon_4 = []
 # alt_4 = []
-x = np.array([:,2])
+
+x = []
 
 for timestamp in data:
     t.append(timestamp[0]) 
-    # lat_1.append(timestamp[1][1]["lat"])
-    # lon_1.append(timestamp[1][1]["lon"])
-    x.append(timestamp[1][1]["lat"], timestamp[1][1]["lon"])
+    lat_1.append(timestamp[1][1]["lat"])
+    lon_1.append(timestamp[1][1]["lon"])
+    x.append([timestamp[1][1]["lat"], timestamp[1][1]["lon"]])
     # alt_1.append(timestamp[1][1]["alt"])
 
     # Left these in since it would be fun to build on them later 
@@ -56,9 +57,9 @@ for timestamp in data:
     # lon_4.append(timestamp[1][4]["lon"])
     # alt_4.append(timestamp[1][4]["alt"])
 
-
-#x = np.array([[lat_1, lon_1]])# Our signal- just lat, lon position 
+# Our signal- just lat, lon position 
 t = np.array(t)
+x = np.array(x)
 print(x.shape)
 print(t.shape)
 nt = t.shape[0]
@@ -71,7 +72,7 @@ offset = 0.0001
 lat_center = 42.49464
 lon_center = -71.6734
 
-a = [1, 1] #Signal multiplier- will be useful once other variables are included in spec
+a = np.array([1,1]) #Signal multiplier- will be useful once other variables are included in spec
 
 left = LinearPredicate(a, lat_center - offset) 
 right = LinearPredicate(-a, -lat_center - offset) 
@@ -79,8 +80,9 @@ top = LinearPredicate(-a, -lon_center - offset)
 bottom = LinearPredicate(a, lon_center - offset)
 
 square_spec = left & right & top & bottom
-pi = square_spec.always(51.3, 58.2) # times determined manually - I might change this in the future 
-
+# Note: these times do not correspond to exact offset points as they need to be ints- originals 51.3, 58.2
+# pi = square_spec.always(513, 582) # times determined manually - I might change this in the future
+pi = square_spec.eventually(0, 15)
 
 # Interval analysis time.
 # Create an uncertainty for each of the values.
@@ -99,8 +101,9 @@ robustness_start_time = time.time() # For reporting the computation time.
 # nt = len(rho)
 # rho = np.array(rho)
 
-for j in range(len(time)):
-    rho.append(pi.robustness((x).T, 0)) #CHANGE? 
+for j in range(nt - 15):
+    rho.append(pi.robustness((x[j:j+20,:].T), 0)) #LOOK CLOSER AT THIS PLEASE 
+
 print("--- Robustness computation took %s seconds ---" % (time.time() - robustness_start_time))
 nt = len(rho)
 rho = np.array(rho)
@@ -108,25 +111,21 @@ rho = np.array(rho)
 # For plotting, convert rho back to two values
 _rho, rho_ = interval.get_lu(rho)
 
-lineTop = np.ones((nt,)) * square_dim
-lineBottom = np.ones((nt,)) * square_dim * -1
-
 rho_fig, rho_axes = plt.subplots()
-rho_fig.subplots_adjust(bottom=0.21, top=0.99, left=0.08, right=0.99)
-t_range = np.array([t * dT for t in range(nt)])
-rho_axes.plot(t_range, _rho, 'b')
-rho_axes.plot(t_range, rho_, 'b')
-rho_axes.fill_between(t_range, _rho, rho_, facecolor='b', alpha=.25)
+rho_axes.ticklabel_format(useOffset=False, style='plain')
+rho_fig.subplots_adjust()
+rho_axes.plot(t[0:1785],  _rho, 'b')
+rho_axes.plot(t[0:1785], rho_, 'b')
+rho_axes.fill_between(t[0:1785], _rho, rho_, facecolor='b', alpha=.25)
 rho_axes.set_ylabel('$[\\rho]$')
 rho_axes.set_xlabel('$t$ (s)')
 rho_axes.grid(True)
 # x_axes.grid(True)
 # x_axes.set_title('$x$')
-rho_fig.set_figheight(2.0)
 
 #Consider adding in a mkdir here
 rho_fig.savefig('output/blimp_trace_monitoring.pdf', format='pdf')
-plt.show()
+
 
 
 # 2D Trajectory Plot
@@ -136,8 +135,7 @@ plt.xlabel("Latitude")
 plt.ylabel("lonitude")
 plt.axis('equal')
 
-square = plt.Rectangle((42.49464 - offset, -71.6734 - offset), 2*offset, 2*offset, facecolor='none', ec="red")
+square = plt.Rectangle((lat_center - offset, lon_center - offset), 2*offset, 2*offset, facecolor='none', ec="red")
 plt.gca().add_patch(square)
 plt.scatter(lat_1, lon_1)
-flying_figure.savefig('output/flying.pdf')
 plt.show()

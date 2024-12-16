@@ -44,14 +44,14 @@ t1 = 0
 t2 = 0
 offset = 0.0001
 
-for timestamp in data:
+for idx, timestamp in enumerate(data):
     lat_1.append(timestamp[1][1]["lat"])
     lon_1.append(timestamp[1][1]["lon"])
     alt_1.append(timestamp[1][1]["alt"])
 
     # Getting the time 
     if(timestamp[1][1]["lat"] >= 42.49464 - offset and timestamp[1][1]["lat"] <= 42.49464 + offset): 
-        time.append(timestamp[0])
+        time.append(idx)
 
     lat_2.append(timestamp[1][2]["lat"])
     lon_2.append(timestamp[1][2]["lon"])
