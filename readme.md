@@ -11,8 +11,17 @@ Install the following packages
 - matplotlib
 - scipy
 - [npinterval](https://github.com/gtfactslab/npinterval)
+    - If npinterval doesn't install correctly, you can also manually put the `interval` folder in the main folder of this repo and it will work fine
+
+To set up stlpy: 
+- Clone [the stlpy repo](https://github.com/vincekurtz/stlpy)
+- Replace `stlpy/STL/predicate.py` with the one in this repo  
+- Replace `stlpy/STL/formula.py` with the one in this repo  
+- Run `python setup.py install` from the home directory of the `stlpy` repo.
 
 Run `python blimp-trace-monitoring.py`.
+
+Fot MITLL data, run `mitll-trace-monitoring.py` or `mitll-trace-monitoring.ipynb`
 
 ## Control Synthesis Example - Figure 2
 Install the following package

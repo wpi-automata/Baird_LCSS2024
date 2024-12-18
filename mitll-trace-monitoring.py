@@ -87,8 +87,6 @@ top = LinearPredicate(-a_long, -lon_center - offset)
 bottom = LinearPredicate(a_long, lon_center - offset)
 
 square_spec = left & right & top & bottom
-# Note: these times do not correspond to exact offset points as they need to be ints- originals 51.3, 58.2
-# pi = square_spec.always(513, 582) # times determined manually - I might change this in the future
 pi = square_spec.always(513, 582)
 
 # Interval analysis time.
